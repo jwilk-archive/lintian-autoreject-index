@@ -1,0 +1,104 @@
+#!/usr/bin/python
+
+import email.utils
+import re
+import ssl
+import sys
+import urllib2
+
+template = '''\
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Lintian Autoreject Tags</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <base href="https://lintian.debian.org/" />
+  <link rel="stylesheet" href="lintian.css" type="text/css" />
+  <link rel="icon" href="ico.png" type="image/png" />
+</head>
+
+<div id="header">
+  <p><a href="index.html">Lintian Reports</a></p>
+  <ul id="nav">
+    <li><a href="maintainers.html">Maintainers</a></li>
+    <li><a href="tags.html">Emitted Tags</a></li>
+    <li><a href="tags-all.html">All Tags</a></li>
+    <li><a href="packages_1.html">Packages</a></li>
+  </ul>
+  <div class="clear"></div>
+</div>
+
+<body>
+<div id="main">
+  <h1>Autoreject Tags</h1>
+  <h2>Fatal</h2>
+  <ul>
+  {fatal}
+  </ul>
+  <h2>Non-fatal</h2>
+  <ul>
+  {nonfatal}
+  </ul>
+</div>
+
+<div id="footer">
+  <p>Last update: {timestamp}.</p>
+</div>
+</body>
+'''
+
+def format_tags(tags, mapping):
+    result = []
+    for tag in sorted(tags):
+        try:
+            line = mapping[tag]
+        except KeyError:
+            print >>sys.stderr, 'No such tag: {tag}'.format(tag=tag)
+            continue
+        if 'Not emitted' in line:
+            line = '<li>{0}</li>'.format(tag)
+        result += [line]
+    return '\n'.join(result)
+
+def main():
+    mapping = {}
+    fatal = set()
+    nonfatal = set()
+    data = None
+    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/AddTrust_External_Root.crt')
+    file = urllib2.urlopen('https://ftp-master.debian.org/static/lintian.tags', context=tls_context)
+    try:
+        for line in file:
+            if re.match('\s+nonfatal:', line):
+                data = nonfatal
+            elif re.match('\s+fatal:', line):
+                data = fatal
+            else:
+                m = re.match('\s+-\s+(\S+)$', line)
+                if m is not None:
+                    data.add(m.group(1))
+    finally:
+        file.close()
+    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/UTN_USERFirst_Hardware_Root_CA.crt')
+    file = urllib2.urlopen('https://lintian.debian.org/tags-all.html', context=tls_context)
+    try:
+        for line in file:
+            m = re.match('\s+<li><a href="tags/(\S+)[.]html">.*</li>', line)
+            if m is not None:
+                mapping[m.group(1)] = line.strip()
+    finally:
+        file.close()
+    print template.format(
+        fatal=format_tags(fatal, mapping),
+        nonfatal=format_tags(nonfatal, mapping),
+        timestamp=email.utils.formatdate(),
+    )
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et ft=python
