@@ -51,12 +51,16 @@ template = '''\
 </body>
 '''
 
+missing_ok = set(['binary-file-compressed-with-upx'])
+
 def format_tags(tags, mapping):
     result = []
     for tag in sorted(tags):
         try:
             line = mapping[tag]
         except KeyError:
+            if tag in missing_ok:
+                continue
             print >>sys.stderr, 'No such tag: {tag}'.format(tag=tag)
             continue
         if 'Not emitted' in line:
