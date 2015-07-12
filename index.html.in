@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import email.utils
 import re
 import ssl
@@ -61,7 +63,7 @@ def format_tags(tags, mapping):
         except KeyError:
             if tag in missing_ok:
                 continue
-            print >>sys.stderr, 'No such tag: {tag}'.format(tag=tag)
+            print('No such tag: {tag}'.format(tag=tag), file=sys.stderr)
             continue
         if 'Not emitted' in line:
             line = '<li>{0}</li>'.format(tag)
@@ -96,11 +98,11 @@ def main():
                 mapping[m.group(1)] = line.strip()
     finally:
         file.close()
-    print template.format(
+    print(template.format(
         fatal=format_tags(fatal, mapping),
         nonfatal=format_tags(nonfatal, mapping),
         timestamp=email.utils.formatdate(),
-    )
+    ))
 
 if __name__ == '__main__':
     main()
