@@ -75,7 +75,7 @@ def main():
     fatal = set()
     nonfatal = set()
     data = None
-    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/AddTrust_External_Root.crt')
+    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt')
     file = urllib2.urlopen('https://ftp-master.debian.org/static/lintian.tags', context=tls_context)
     try:
         for line in file:
