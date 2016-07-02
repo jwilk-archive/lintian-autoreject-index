@@ -75,7 +75,7 @@ def main():
     fatal = set()
     nonfatal = set()
     data = None
-    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt')
+    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/USERTrust_RSA_Certification_Authority.crt')
     file = urllib2.urlopen('https://ftp-master.debian.org/static/lintian.tags', context=tls_context)
     try:
         for line in file:
@@ -89,6 +89,7 @@ def main():
                     data.add(m.group(1))
     finally:
         file.close()
+    tls_context = ssl.create_default_context(cafile='/usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt')
     file = urllib2.urlopen('https://lintian.debian.org/tags-all.html', context=tls_context)
     try:
         for line in file:
