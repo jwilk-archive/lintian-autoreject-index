@@ -79,12 +79,12 @@ def main():
     file = urllib2.urlopen('https://ftp-master.debian.org/static/lintian.tags', context=tls_context)
     try:
         for line in file:
-            if re.match('\s+nonfatal:', line):
+            if re.match(r'\s+nonfatal:', line):
                 data = nonfatal
-            elif re.match('\s+fatal:', line):
+            elif re.match(r'\s+fatal:', line):
                 data = fatal
             else:
-                m = re.match('\s+-\s+(\S+)$', line)
+                m = re.match(r'\s+-\s+(\S+)$', line)
                 if m is not None:
                     data.add(m.group(1))
     finally:
@@ -92,7 +92,7 @@ def main():
     file = urllib2.urlopen('https://lintian.debian.org/tags-all.html', context=tls_context)
     try:
         for line in file:
-            m = re.match('\s+<li><a href="tags/(\S+)[.]html">.*</li>', line)
+            m = re.match(r'\s+<li><a href="tags/(\S+)[.]html">.*</li>', line)
             if m is not None:
                 mapping[m.group(1)] = line.strip()
     finally:
